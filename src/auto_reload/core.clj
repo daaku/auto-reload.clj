@@ -17,9 +17,11 @@
     (doseq [dir dirs]
       (.register (.getPath fs dir strs) watcher events))
     (while true
-      (let [key (.take watcher)]
-        (doseq [ns-sym (modified-namespaces)]
-          (require ns-sym :reload))
+      (let [key (.take watcher)
+            events (.pollEvents key)]
+        (if (not-every? #(= (.kind %) StandardWatchEventKinds/OVERFLOW) events)
+          (doseq [ns-sym (modified-namespaces)]
+            (require ns-sym :reload)))
         (.reset key)))))
 
 (defn auto-reload [dirs]
